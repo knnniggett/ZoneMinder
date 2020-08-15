@@ -155,6 +155,14 @@ function thumbnail_onmouseout(event) {
   img.src = img.getAttribute('still_src');
 }
 
+function getIdSelections() {
+  var table = $j('#eventTable');
+  
+  return $j.map(table.bootstrapTable('getSelections'), function (row) {
+    return row.Id.replace(/(<([^>]+)>)/gi, "") // strip the html from the element before sending
+  })
+}
+
 function initPage() {
   if ( window.history.length == 1 ) {
     $j('#controls').children().eq(0).html('');
@@ -174,6 +182,36 @@ function initPage() {
     evt.preventDefault();
     window.history.back();
   });
+  // Ajax call to delete the selected row(s)
+  document.getElementById("deleteBtn").addEventListener("click", function onDeleteClick(evt) {
+    var table = $j('#eventTable');
+    var selections = getIdSelections();
+    
+    evt.preventDefault();
+    alert("These items have been selected for deletion: "+JSON.stringify(selections));
+    $j.getJSON(thisUrl + '?view=events&action=delete&eids[]='+JSON.stringify(selections));
+    window.location.reload(true);
+  });
 }
 
-$j(document).ready(initPage);
+$j(document).ready(function() {
+  initPage();
+  var viewBtn = $j('#viewBtn');
+  var archiveBtn = $j('#archiveBtn');
+  var unarchiveBtn = $j('#unarchiveBtn');
+  var editBtn = $j('#editBtn');
+  var exportBtn = $j('#exportBtn');
+  var downloadBtn = $j('#downloadBtn');
+  var deleteBtn = $j('#deleteBtn');
+  var table = $j('#eventTable');
+  table.on('check.bs.table uncheck.bs.table ' +
+  'check-all.bs.table uncheck-all.bs.table',
+  function () {
+    viewBtn.prop('disabled', !table.bootstrapTable('getSelections').length)
+    archiveBtn.prop('disabled', !table.bootstrapTable('getSelections').length)
+    editBtn.prop('disabled', !table.bootstrapTable('getSelections').length)
+    exportBtn.prop('disabled', !table.bootstrapTable('getSelections').length)
+    downloadBtn.prop('disabled', !table.bootstrapTable('getSelections').length)
+    deleteBtn.prop('disabled', !table.bootstrapTable('getSelections').length)
+    })
+});
